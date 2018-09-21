@@ -1,0 +1,11 @@
+mod = [
+	"ChatWheel"
+]
+
+package = [
+	"resource_packages/ChatWheel/ChatWheel"
+]
+
+lua = [
+	"scripts/mods/ChatWheel/*"
+]
