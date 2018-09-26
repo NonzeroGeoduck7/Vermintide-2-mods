@@ -1,0 +1,11 @@
+mod = [
+	"lootRatAmmo"
+]
+
+package = [
+	"resource_packages/lootRatAmmo/lootRatAmmo"
+]
+
+lua = [
+	"scripts/mods/lootRatAmmo/*"
+]
