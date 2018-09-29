@@ -1,0 +1,11 @@
+mod = [
+	"QuickGameMapSelect"
+]
+
+package = [
+	"resource_packages/QuickGameMapSelect/QuickGameMapSelect"
+]
+
+lua = [
+	"scripts/mods/QuickGameMapSelect/*"
+]
