@@ -34,8 +34,21 @@ mod.text_duration = 5 -- in seconds
 
 
 mod:hook(ScriptWorld, "load_level", function(func, world, level_name, ...)
-	
+
+	-- reset all variables when loading level
 	mod.fighting_naglfahr = nil
+	mod.text = nil
+	mod.text_time = nil
+	mod.text_rasknitt = nil
+	mod.text_time_rasknitt = nil
+	
+	mod.oneDead = 0
+	mod.rasknitt_fight = false
+	
+	mod.deathrattler_intro = false
+	mod.rasknitt = nil
+	mod.burb_intro = false
+	
 	
 	-- no timers should be carried over from earlier games
 	for key,_ in pairs(mod.bossname) do
@@ -54,7 +67,7 @@ end)
 -- message when boss killed
 mod:hook(IngameHud, "_draw", function (func, self, ...)
 
-	if mod.text then
+	if mod.text and mod:get("activated") then
 	
 		if os.time() - mod.text_time < mod.text_duration then
 		
@@ -403,6 +416,60 @@ end)
 -- *********************
 
 
+
+mod:hook(DeathSystem, "kill_unit", function(func, self, unit, killing_blow)
+	
+	if mod.start[unit] then -- not nil
+			
+		local time_end = os.time()
+		
+		if mod.bossname[unit] then
+			mod:echo(mod.bossname[unit] .. " died after " .. tostring(math.floor((time_end - mod.start[unit])/60)) .. " min " .. tostring((time_end - mod.start[unit])%60) .. " seconds.")
+			
+			--visual
+			mod.text = mod.bossname[unit] .. " died after " .. tostring(math.floor((time_end - mod.start[unit])/60)) .. " min " .. tostring((time_end - mod.start[unit])%60) .. " seconds."
+			mod.text_time = os.time()
+		
+			-- if rasknitt dies
+			if mod.rasknitt_fight then
+				if mod.oneDead == 0 then
+					-- rasknitt or deathrattler still alive
+					-- mod:echo("1 dead [generic]")
+					mod.oneDead = time_end - mod.start[unit]
+				else
+					-- both bosses dead
+					local diff = (time_end - mod.start[unit]) - mod.oneDead
+					
+					mod:echo("The Grey Seer Rasknitt died " .. tostring(diff) .. " sec after his bud Deathrattler.")
+					
+					
+					-- visual
+					mod.text_rasknitt = "The Grey Seer Rasknitt died " .. tostring(diff) .. " sec after his bud Deathrattler."
+					mod.text_time_rasknitt = os.time()
+					
+					
+					-- reset
+					mod.oneDead = 0
+					mod.rasknitt_fight = false
+				end
+			end
+		
+		end
+		
+		-- reset
+		mod.bossname[unit] = nil
+		mod.start[unit] = nil
+		
+	else
+		-- mod:echo("unit died, boss alive since " .. tostring(mod.start))
+	end
+	
+	return func(self, unit, killing_blow)
+end)
+
+
+-- old version: Health extension hook
+--[[
 mod:hook(GenericHealthExtension, "add_damage", function (func, self, attacker_unit, damage_amount, hit_zone_name, damage_type, damage_direction, damage_source_name, hit_ragdoll_actor, damaging_unit, hit_react_type, is_critical_strike, added_dot)
 	
 	local unit = self.unit
@@ -411,15 +478,13 @@ mod:hook(GenericHealthExtension, "add_damage", function (func, self, attacker_un
 	local damage_table = self:_add_to_damage_history_buffer(unit, attacker_unit, damage_amount, hit_zone_name, damage_type, damage_direction, damage_source_name, hit_ragdoll_actor, damaging_unit, hit_react_type, is_critical_strike)
 
 	
-	--[[
 	
-	if unit == mod.boss then
-		mod:echo(tostring(mod.start))
-	else
-		mod:echo(tostring(unit) .. " " .. tostring(mod.boss))
-	end
+--	if unit == mod.boss then
+--		mod:echo(tostring(mod.start))
+--	else
+--		mod:echo(tostring(unit) .. " " .. tostring(mod.boss))
+--	end
 	
-	]]--
 	
 	
 	StatisticsUtil.register_damage(unit, damage_table, self.statistics_db)
@@ -566,22 +631,8 @@ mod:hook(RatOgreHealthExtension, "update", function (func, self, ...)
 
 	Unit.animation_set_variable(unit, self._wounded_anim_variable, wounded_value)
 end)
-
-
-
---[[
-	Callbacks
 --]]
 
-
-mod.on_disabled = function(is_first_call)
-	mod:disable_all_hooks()
-end
-
-
-mod.on_enabled = function(is_first_call)
-	mod:enable_all_hooks()
-end
 
 
 --[[
