@@ -1,12 +1,6 @@
 return {
-	mod_description = {
-		en = "This mod measures the time you need to kill monsters and lords."
-	},
-	example_checkbox_option_name = {
-		en = "Example Checkbox Option"
-	},
-	example_checkbox_option_tooltip = {
-		en = "Example Checkbox Option description."
+	box = {
+		en = "show a text message on the screen when bosses die"
 	},
 --[[
 	some_other_text_id = {
