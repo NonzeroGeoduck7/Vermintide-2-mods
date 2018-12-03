@@ -1,0 +1,11 @@
+mod = [
+	"oldTorch"
+]
+
+package = [
+	"resource_packages/oldTorch/oldTorch"
+]
+
+lua = [
+	"scripts/mods/oldTorch/*"
+]
