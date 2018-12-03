@@ -63,7 +63,7 @@ end)
 
 mod:hook(MatchmakingManager, "find_game", function (func, self, search_config)
 	
-	if search_config.quick_game then
+	if search_config.quick_game and self.is_server then
 		if mod.host then
 		
 			search_config.always_host = true
@@ -80,6 +80,7 @@ mod:hook(MatchmakingManager, "find_game", function (func, self, search_config)
 	return func(self, search_config)
 
 end)
+
 
 
 --[[
