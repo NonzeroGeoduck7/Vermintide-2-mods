@@ -1,0 +1,11 @@
+mod = [
+	"keyPickupMessage"
+]
+
+package = [
+	"resource_packages/keyPickupMessage/keyPickupMessage"
+]
+
+lua = [
+	"scripts/mods/keyPickupMessage/*"
+]
