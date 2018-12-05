@@ -8,12 +8,6 @@ return {
 	is_mutator = false,                             -- If the mod is mutator
 	mutator_settings = {},                          -- Extra settings, if it's mutator
 	options_widgets = {                             -- Widget settings for the mod options menu
-		{
-			["setting_name"] = "private",
-			["widget_type"] = "checkbox",
-			["text"] = "start Quick Play games in private mode",
-			["tooltip"] = "",
-			["default_value"] = false
-		}
+		
 	}
 }

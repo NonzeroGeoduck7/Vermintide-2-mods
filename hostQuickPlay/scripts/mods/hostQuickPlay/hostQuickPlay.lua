@@ -68,10 +68,6 @@ mod:hook(MatchmakingManager, "find_game", function (func, self, search_config)
 		
 			search_config.always_host = true
 			
-			if mod:get("private") then
-				search_config.private_game = true
-			end
-			
 		end
 
 	end
