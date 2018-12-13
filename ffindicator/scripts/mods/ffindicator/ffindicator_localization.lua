@@ -1,12 +1,6 @@
 return {
 	mod_description = {
-		en = "green damage indicator when taking friendly fire"
-	},
-	example_checkbox_option_name = {
-		en = "Example Checkbox Option"
-	},
-	example_checkbox_option_tooltip = {
-		en = "Example Checkbox Option description."
+		en = "show a green damage indicator when you take friendly fire"
 	},
 --[[
 	some_other_text_id = {

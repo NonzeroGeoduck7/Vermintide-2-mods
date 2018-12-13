@@ -23,6 +23,8 @@ local ignored_damage_types = {
 	life_drain = true
 }
 
+local MAX_INDICATOR_WIDGETS = 10
+
 --[[
 	Functions
 --]]
@@ -56,8 +58,8 @@ mod:hook(DamageIndicatorGui, "update", function (func, self, dt)
 			local damage_type = strided_array[index + DamageDataIndex.DAMAGE_TYPE]
 			local show_direction = not ignored_damage_types[damage_type]
 			
-			-- mod:echo("damage: "..tostring(damage_type).." atk "..tostring(attacker))
-
+			--mod:echo("damage: "..tostring(damage_type).." atk "..tostring(attacker))
+			
 			local ff = false
 			for i,name in ipairs(PLAYER_UNITS) do
 				-- mod:echo(tostring(i).." "..tostring(name))
@@ -70,26 +72,33 @@ mod:hook(DamageIndicatorGui, "update", function (func, self, dt)
 			if attacker and Unit.alive(attacker) and show_direction then
 				local next_active_indicator = self.num_active_indicators + 1
 
+				if next_active_indicator > MAX_INDICATOR_WIDGETS then
+					next_active_indicator = 1
+				end
+
 				local widget = indicator_widgets[next_active_indicator]
 	
-				if ff then
-					widget.style.rotating_texture.color = {
-						255,
-						0,
-						213,
-						0
-					}
-					
-					-- 
-				else
-					widget.style.rotating_texture.color = {
-						255,
-						255,
-						255,
-						255
-					}
+				if widget then
+					mod:pcall(function ()
+						if ff then
+							widget.style.rotating_texture.color = {
+								100,
+								0,
+								255,
+								0
+							}
+							
+							-- 
+						else
+							widget.style.rotating_texture.color = {
+								255,
+								252,
+								227,
+								0
+							}
+						end
+					end)
 				end
-				
 			end
 		end
 	end
@@ -98,7 +107,6 @@ mod:hook(DamageIndicatorGui, "update", function (func, self, dt)
 	return func(self, dt)
 	
 end)
-
 
 --[[
 	Callbacks
