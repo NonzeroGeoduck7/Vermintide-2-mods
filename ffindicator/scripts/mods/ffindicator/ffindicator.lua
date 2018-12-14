@@ -29,6 +29,13 @@ local MAX_INDICATOR_WIDGETS = 10
 	Functions
 --]]
 
+function mod.hide_indicator(widget)
+	if widget then
+		widget.style.rotating_texture.size = {0,0}
+	end
+
+	return widget
+end
 
 --[[
 	Hooks
@@ -58,7 +65,7 @@ mod:hook(DamageIndicatorGui, "update", function (func, self, dt)
 			local damage_type = strided_array[index + DamageDataIndex.DAMAGE_TYPE]
 			local show_direction = not ignored_damage_types[damage_type]
 			
-			--mod:echo("damage: "..tostring(damage_type).." atk "..tostring(attacker))
+			-- mod:echo("damage: "..tostring(damage_type).." atk "..tostring(attacker))
 			
 			local ff = false
 			for i,name in ipairs(PLAYER_UNITS) do
@@ -79,24 +86,65 @@ mod:hook(DamageIndicatorGui, "update", function (func, self, dt)
 				local widget = indicator_widgets[next_active_indicator]
 	
 				if widget then
+
 					mod:pcall(function ()
+
+						-- standard size
+						widget.style.rotating_texture.size = {423,174}
+
+						if mod:get("noIndicator") then
+							mod:pcall(function()
+								widget = mod.hide_indicator(widget)
+							end)
+						end
+						
+						if mod:get("noPackmasterIndicator") and damage_type == "pack_master_grab" then
+							mod:pcall(function()
+								widget = mod.hide_indicator(widget)
+							end)
+						end
+						
+						if mod:get("noPushIndicator") and damage_type == "blunt" then
+							mod:pcall(function()
+								widget = mod.hide_indicator(widget)
+							end)
+						end
+						
+						if mod:get("noOverchargeIndicator") and damage_type == "overcharge" then
+							mod:pcall(function()
+								widget = mod.hide_indicator(widget)
+							end)
+						end
+
 						if ff then
-							widget.style.rotating_texture.color = {
-								100,
-								0,
-								255,
-								0
-							}
-							
+							if mod:get("blackIndicator") then
+								-- black
+								widget.style.rotating_texture.color = {
+									0,
+									0,
+									0,
+									0
+								}
+							else
+								-- green
+								widget.style.rotating_texture.color = {
+									100,
+									0,
+									255,
+									0
+								}
+							end
 							-- 
 						else
+							-- standard red
 							widget.style.rotating_texture.color = {
 								255,
-								252,
-								227,
-								0
+								255,
+								255,
+								255
 							}
 						end
+						
 					end)
 				end
 			end
