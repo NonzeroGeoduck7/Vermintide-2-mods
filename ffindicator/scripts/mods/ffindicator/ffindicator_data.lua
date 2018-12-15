@@ -22,6 +22,12 @@ return {
 			["default_value"] = false
 		},
 		{
+			["setting_name"] = "noHagbaneIndicator",
+			["widget_type"] = "checkbox",
+			["text"] = mod:localize("noHagbaneIndicatorName"),
+			["default_value"] = true
+		},
+		{
 			["setting_name"] = "noOverchargeIndicator",
 			["widget_type"] = "checkbox",
 			["text"] = mod:localize("noOverchargeIndicatorName"),
@@ -38,7 +44,7 @@ return {
 			["widget_type"] = "checkbox",
 			["text"] = mod:localize("noPushIndicatorName"),
 			["default_value"] = true
-		}
+		},
 		
 	}
 }

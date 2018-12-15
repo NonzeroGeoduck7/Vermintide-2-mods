@@ -8,13 +8,16 @@ return {
 	noIndicatorName = {
 		en = "hide all damage indicators"
 	},
-	noPackmasterIndicatorName = {
-		en = "hide Packmaster grab indicator"
+	noHagbaneIndicatorName = {
+		en = "hide damage indicator when taking damage from hagbane"
 	},
 	noOverchargeIndicatorName = {
 		en = "hide damage indicator when venting as Bardin or Sienna"
 	},
+	noPackmasterIndicatorName = {
+		en = "hide Packmaster grab indicator"
+	},
 	noPushIndicatorName = {
 		en = "hide damage indicator when being pushed by an enemy (SV, Chaos Warrior, Raider etc)"
-	}
+	},
 }

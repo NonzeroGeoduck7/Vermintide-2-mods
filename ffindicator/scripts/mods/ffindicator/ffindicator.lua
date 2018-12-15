@@ -41,7 +41,6 @@ end
 	Hooks
 --]]
 
-
 -- If you want to do something more involved
 mod:hook(DamageIndicatorGui, "update", function (func, self, dt)
 
@@ -115,7 +114,13 @@ mod:hook(DamageIndicatorGui, "update", function (func, self, dt)
 								widget = mod.hide_indicator(widget)
 							end)
 						end
-
+						
+						if mod:get("noHagbaneIndicator") and damage_type == "arrow_poison_dot" then
+							mod:pcall(function()
+								widget = mod.hide_indicator(widget)
+							end)
+						end
+						
 						if ff then
 							if mod:get("blackIndicator") then
 								-- black
