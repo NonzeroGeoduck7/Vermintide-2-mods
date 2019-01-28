@@ -1,0 +1,11 @@
+mod = [
+	"ffindicator"
+]
+
+package = [
+	"resource_packages/ffindicator/ffindicator"
+]
+
+lua = [
+	"scripts/mods/ffindicator/*"
+]

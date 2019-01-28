@@ -1,0 +1,11 @@
+mod = [
+	"hostQuickPlay"
+]
+
+package = [
+	"resource_packages/hostQuickPlay/hostQuickPlay"
+]
+
+lua = [
+	"scripts/mods/hostQuickPlay/*"
+]

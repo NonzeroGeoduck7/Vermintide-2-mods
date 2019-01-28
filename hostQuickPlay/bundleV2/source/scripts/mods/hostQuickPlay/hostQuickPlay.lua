@@ -90,9 +90,7 @@ mod:hook(NetworkServer, "num_active_peers", function(func, self)
 		mod:echo("call num_active_peers")
 	end
 	
-	-- original function
 	local res = func(self)
-	
 	if mod.calling_from_quick_play_search then
 		mod.calling_from_quick_play_search = false
 		return 2
