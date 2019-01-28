@@ -9,15 +9,14 @@ local mod = get_mod("hostQuickPlay")
 	https://github.com/Aussiemon/Vermintide-2-Source-Code/blob/04a4a9e353bd5bba37dec23ee1bd416aec2d6c55/scripts/ui/views/start_game_view/windows/start_game_window_settings.lua
 --]]
 
-mod.debug = false
-
 mod.calling_from_quick_play_search = false
 mod.host = false
-mod.in_inn = true
+mod.in_inn = false
 
 mod.toggle_host = function()
 
 	if not mod.in_inn then
+		mod:echo("This command can only be used in the Keep")
 		return
 	end
 	
@@ -37,7 +36,9 @@ end
 
 mod:hook(ScriptWorld, "load_level", function (func, world, level_name, ...)
 	
-	if level_name == "levels/inn/world" then
+	-- mod:echo(level_name)
+	
+	if level_name == "levels/inn/world" or level_name == "levels/ui_character_selection/world" then
 		mod.in_inn = true
 	else
 		mod.in_inn = false
@@ -86,9 +87,7 @@ end)
 
 mod:hook(NetworkServer, "num_active_peers", function(func, self)
 
-	if mod.debug then
-		mod:echo("call num_active_peers")
-	end
+	-- mod:echo("call num_active_peers")
 	
 	-- original function
 	local res = func(self)
