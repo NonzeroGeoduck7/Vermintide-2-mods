@@ -9,16 +9,9 @@ local mod = get_mod("hostQuickPlay")
 	https://github.com/Aussiemon/Vermintide-2-Source-Code/blob/04a4a9e353bd5bba37dec23ee1bd416aec2d6c55/scripts/ui/views/start_game_view/windows/start_game_window_settings.lua
 --]]
 
-mod.calling_from_quick_play_search = false
 mod.host = false
-mod.in_inn = false
 
 mod.toggle_host = function()
-
-	if not mod.in_inn then
-		mod:echo("This command can only be used in the Keep")
-		return
-	end
 	
 	mod.host = not mod.host
 	
@@ -34,18 +27,6 @@ end
 	Hooks
 --]]
 
-mod:hook(ScriptWorld, "load_level", function (func, world, level_name, ...)
-	
-	-- mod:echo(level_name)
-	
-	if level_name == "levels/inn/world" or level_name == "levels/ui_character_selection/world" then
-		mod.in_inn = true
-	else
-		mod.in_inn = false
-	end
-	
-	return func(world, level_name, ...)
-end)
 
 
 -- player position
@@ -66,39 +47,14 @@ mod:hook(PlayerUnitFirstPerson, "update_position", function (func, self)
 end)
 --]]
 
+
 mod:hook(MatchmakingManager, "find_game", function (func, self, search_config)
-	
-	if search_config.quick_game and self.is_server then
-		if mod.host then
-		
-			mod.calling_from_quick_play_search = true
-			
-		end
 
+	if self.is_server and mod.host then
+		search_config.always_host = true
 	end
 
-	-- original function
-	local res = func(self, search_config)
-
-	mod.calling_from_quick_play_search = false
-	return res
-	
-end)
-
-mod:hook(NetworkServer, "num_active_peers", function(func, self)
-
-	-- mod:echo("call num_active_peers")
-	
-	-- original function
-	local res = func(self)
-	
-	if mod.calling_from_quick_play_search then
-		mod.calling_from_quick_play_search = false
-		return 2
-	else
-		return res
-	end
-	
+	return func(self, search_config)
 end)
 
 
