@@ -5,4 +5,7 @@ return {
 	keybind_toggle_name = {
 		en = "Keybind: enable / disable the mod"
 	},
+	noUI = {
+		en = "Show Checkboxes in the start-mission UI"
+	},
 }
