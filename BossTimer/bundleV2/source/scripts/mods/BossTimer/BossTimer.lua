@@ -7,6 +7,16 @@ mod.bossname = {}
 -- start times of all boss fights
 mod.start = {}
 
+-- if we want to skip messages
+mod.skip = false
+mod.skip_terror_events = {
+	"mines_end_event_intro_trolls",
+	"mines_end_event_trolls",
+}
+
+-- map [unit -> true/false]
+mod.intro_started = {}
+
 -- used because naglfahr transforms intro regular chaos spawn
 mod.time_start_fighting_naglfahr = nil
 
@@ -21,8 +31,54 @@ mod.oneDead = nil
 mod.text_duration = 5 -- in seconds
 
 
+local chaos_kills = 0
+local skaven_kills = 0
+local elite_kills = 0
+local special_kills = 0
+
+
+mod.get_game_time = function()
+	return Managers.time:time("game")
+end
+
+mod.get_breed_info = function(unit)
+	breed = AiUtils.unit_breed(unit)
+	if breed then
+		return breed.race, breed.elite, breed.special
+	end
+end
+
+mod.is_me = function(unit)
+	return (unit == Managers.player:local_player().player_unit)
+end
+
+mod.reset_killstats = function()
+	size = 0
+	for i,j in pairs(mod.bossname) do
+		size = size + 1
+	end
+	if size <= 0 then
+		chaos_kills = 0
+		skaven_kills = 0
+		elite_kills = 0
+		special_kills = 0
+	end
+end
+
+mod.skip_event = function(event_name)
+	local skp = false
+	for _,item in ipairs(mod.skip_terror_events) do
+		if item == event_name then
+			skp = true
+		end
+	end
+	return skp
+end
+
+
 -- variable to save rasknitt unit hash when he spawns
 mod.rasknitt = nil
+mod.deathrattler = nil
 
 mod:hook(ScriptWorld, "load_level", function(func, world, level_name, ...)
 
@@ -40,62 +96,16 @@ mod:hook(ScriptWorld, "load_level", function(func, world, level_name, ...)
 	mod.rasknitt = nil
 	mod.burb_intro = false
 	
+	mod.is_warcamp_mission = level_name == "warcamp"
 	
 	-- no timers should be carried over from earlier games
 	mod.bossname = {}
 
 	mod.start = {}
 	
+	mod.reset_killstats()
+	
 	return func(world, level_name, ...)
-end)
-
-
--- stuff for later.
--- WeaponUnitExtension.start_action
--- WeaponUnitExtension._finish_action
--- damageUtils projectile hit
-
-
-mod:hook(BTLeaveHooks, "on_lord_intro_leave", function (func, unit, blackboard, t)
-
-	-- burblespue, bödvarr
-
-	-- save start time
-	mod.start[unit] = os.time()
-	
-	func(unit, blackboard, t)
-end)
-
-mod:hook(BTLeaveHooks, "on_lord_warlord_intro_leave", function (func, unit, blackboard, t)
-
-	-- skarrik
-
-	-- save start time
-	mod.start[unit] = os.time()
-	
-	func(unit, blackboard, t)
-end)
-
-mod:hook(BTLeaveHooks, "on_grey_seer_intro_leave", function (func, unit, blackboard, t)
-
-	-- save rasknitt unit hash, to use the same timer as for deathrattler
-	mod.rasknitt = unit
-	mod.bossname[unit] = "Rasknitt"
-	mod.rasknitt_fight = true
-	
-	func(unit, blackboard, t)
-end)
-
-mod:hook(BTLeaveHooks, "stormfiend_boss_jump_down_leave", function (func, unit, blackboard, t)
-
-	mod.bossname[unit] = "Deathrattler"
-	mod.start[unit] = os.time()
-	if mod.rasknitt then
-		mod.start[mod.rasknitt] = os.time()
-		mod.rasknitt = nil
-	end
-	
-	func(unit, blackboard, t)
 end)
 
 
@@ -103,7 +113,7 @@ end)
 mod:hook(IngameUI, "update", function (func, self, ...)
 
 	if mod.text and mod:get("activated") then
-		if os.time() - mod.start_display_time < mod.text_duration then
+		if mod.get_game_time() - mod.start_display_time < mod.text_duration then
 			mod.show_display_kill_message(self, mod.text, false)
 		else
 			mod.text = nil
@@ -112,7 +122,7 @@ mod:hook(IngameUI, "update", function (func, self, ...)
 	end
 	
 	if mod.text_rasknitt and mod.start_display_time_rasknitt then
-		if os.time() - mod.start_display_time_rasknitt < mod.text_duration then
+		if mod.get_game_time() - mod.start_display_time_rasknitt < mod.text_duration then
 			mod.show_display_kill_message(self, mod.text_rasknitt, true)
 		else
 			mod.text_rasknitt = nil
@@ -126,8 +136,8 @@ mod:hook(IngameUI, "update", function (func, self, ...)
 end)
 
 
-mod.show_display_kill_message = function(self, text, second_line)
-
+mod.show_display_kill_message = function(self, text, is_second_line)
+	
 	local font_name = "gw_head_32"
 	local font_mtrl = "materials/fonts/" .. font_name
 
@@ -138,7 +148,7 @@ mod.show_display_kill_message = function(self, text, second_line)
 		local width, height = UIRenderer.text_size(self.ui_top_renderer, text, font_mtrl, font_size)
 		width, height = width * RESOLUTION_LOOKUP.scale, height * RESOLUTION_LOOKUP.scale
 		
-		if second_line then
+		if is_second_line then
 			height = 3*height
 		end
 		
@@ -152,16 +162,20 @@ mod:hook(World, "spawn_unit", function (func, self, unit_name, ...)
 
 	local unit = func(self, unit_name, ...)
 	
+	if mod.skip then
+		return unit
+	end
+	
 	if unit_name == "units/beings/enemies/skaven_stormfiend/chr_skaven_stormfiend" then
 		mod.bossname[unit] = "Stormfiend"
-		mod.start[unit] = os.time()
-    elseif unit_name == "units/beings/enemies/skaven_rat_ogre/chr_skaven_rat_ogre" then
+		mod.start[unit] = mod.get_game_time()
+	elseif unit_name == "units/beings/enemies/skaven_rat_ogre/chr_skaven_rat_ogre" then
 		mod.bossname[unit] = "Rat Ogre"
-		mod.start[unit] = os.time()
-    elseif unit_name == "units/beings/enemies/chaos_troll/chr_chaos_troll" then
+		mod.start[unit] = mod.get_game_time()
+	elseif unit_name == "units/beings/enemies/chaos_troll/chr_chaos_troll" then
 		mod.bossname[unit] = "Bile Troll"
-		mod.start[unit] = os.time()
-    elseif unit_name == "units/beings/enemies/chaos_spawn/chr_chaos_spawn" then
+		mod.start[unit] = mod.get_game_time()
+	elseif unit_name == "units/beings/enemies/chaos_spawn/chr_chaos_spawn" then
 		
 		--------------------------------------------------------
 		-- Naglfahr transformation also spawns chaos spawn :( --
@@ -174,7 +188,7 @@ mod:hook(World, "spawn_unit", function (func, self, unit_name, ...)
 			mod.time_start_fighting_naglfahr = nil
 		else
 			mod.bossname[unit] = "Chaos Spawn"
-			mod.start[unit] = os.time()
+			mod.start[unit] = mod.get_game_time()
 		end
 	
 	elseif unit_name == "units/beings/enemies/skaven_stormvermin_champion/chr_skaven_stormvermin_warlord" then
@@ -182,69 +196,59 @@ mod:hook(World, "spawn_unit", function (func, self, unit_name, ...)
 	elseif unit_name == "units/beings/enemies/chaos_sorcerer_boss/chr_chaos_sorcerer_boss" then
 		mod.bossname[unit] = "Burblespue Halescourge"
 	elseif unit_name == "units/beings/enemies/chaos_warrior_boss/chr_chaos_warrior_boss" then
-		mod.bossname[unit] = "Gatekeeper Naglfahr"
-		mod.time_start_fighting_naglfahr = os.time()
+		if mod.is_warcamp_mission then
+			mod.bossname[unit] = "Bödvarr Ribspreader"
+		else
+			mod.bossname[unit] = "Gatekeeper Naglfahr"
+			mod.time_start_fighting_naglfahr = mod.get_game_time()
+		end
+		
+	elseif unit_name == "units/beings/enemies/skaven_grey_seer/chr_skaven_grey_seer" then
+		mod.bossname[unit] = "Rasknitt"
+		mod.rasknitt = unit
+	elseif unit_name == "units/beings/enemies/skaven_stormfiend/chr_skaven_stormfiend_boss" then
+		mod.bossname[unit] = "Deathrattler"
+		mod.deathrattler = unit
 	end
 	
-	--mod:echo(unit_name)
+	-- mod:echo("spawn: "..tostring(unit_name))
+	mod.reset_killstats()
 	
 	return unit
 	
 end)
 
 
--- BöDVARR
-mod.bodvarr_intro = false
-mod:hook(BTSelector_chaos_exalted_champion_warcamp, "run", function (func, self, unit, blackboard, t, dt)
-	
-	local child_running = self:current_running_child(blackboard)
-	local children = self._children
-	
-	local node_intro_sequence = children[2]
-	
-	if not mod.bodvarr_intro then
-		if node_intro_sequence == child_running then
-			-- intro starts
-			mod.bodvarr_intro = true
-		end
-	else
-		if node_intro_sequence ~= child_running then
-			-- intro finished
-			mod.bodvarr_intro = false
-			
-			-- start timer
-			mod.bossname[unit] = "Bödvarr Ribspreader"
-		
-			mod.start[unit] = os.time()
-		end
-	end
-	
-	-- original function
-	return func(self, unit, blackboard, t, dt)
-	
-end)
 
 --------------------------------------------------------
 -- time difference of rasknitt and deathrattler death --
 --------------------------------------------------------
 
 
+local update = false
+
 mod:hook(DeathSystem, "kill_unit", function(func, self, unit, killing_blow)
 	
 	if mod.start[unit] then -- not nil
 			
-		local time_end = os.time()
+		local time_end = mod.get_game_time()
 		
 		if mod.bossname[unit] then
 			
 			--visual
 			mod.text = mod.bossname[unit] .. " died after "
 			if math.floor((time_end - mod.start[unit])/60) > 0 then
-				mod.text = mod.text .. tostring(math.floor((time_end - mod.start[unit])/60)) .. " min "
+				local time_min = math.floor((time_end - mod.start[unit])/60)
+				mod.text = mod.text .. tostring(time_min) .. " minute"
+				if time_min > 1 then
+					mod.text = mod.text .. "s"
+				end
 			end
-			mod.text = mod.text .. tostring((time_end - mod.start[unit])%60) .. " seconds."
-			mod:echo(mod.text)
-			mod.start_display_time = os.time()
+			mod.text = mod.text .. " " .. tostring(math.floor((time_end - mod.start[unit])%60)) .. " seconds."
+			if mod:get("activated_text") then
+				mod:echo(mod.text)
+			end
+			mod.start_display_time = mod.get_game_time()
 		
 			-- if rasknitt dies
 			if mod.rasknitt_fight then
@@ -253,15 +257,19 @@ mod:hook(DeathSystem, "kill_unit", function(func, self, unit, killing_blow)
 					mod.oneDead = time_end - mod.start[unit]
 				else
 					-- both bosses dead
-					local diff = (time_end - mod.start[unit]) - mod.oneDead
+					local diff = math.floor((time_end - mod.start[unit]) - mod.oneDead)
 					
 					-- visual
 					mod.text_rasknitt = "The Grey Seer Rasknitt died " .. tostring(diff) .. " sec after his buddy Deathrattler."
-					mod.start_display_time_rasknitt = os.time()
-					mod:echo(mod.text_rasknitt)
+					mod.start_display_time_rasknitt = mod.get_game_time()
+					if mod:get("activated_text") then
+						mod:echo(mod.text_rasknitt)
+					end
 					
 					-- reset
 					mod.oneDead = nil
+					mod.rasknitt = nil
+					mod.deathrattler = nil
 					mod.rasknitt_fight = false
 				end
 			end
@@ -272,10 +280,64 @@ mod:hook(DeathSystem, "kill_unit", function(func, self, unit, killing_blow)
 		mod.bossname[unit] = nil
 		mod.start[unit] = nil
 		
+		mod.reset_killstats()
+		
 	else
 		-- mod:echo("unit died, boss alive since " .. tostring(mod.start))
 	end
 	
 	return func(self, unit, killing_blow)
 end)
+
+
+
+--------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------
+-- SKIP SOME NOTIFICATIONS (troll kills at the ending of the darkness mission)
+--------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------
+
+mod:hook(ConflictDirector, "start_terror_event", function (func, self, event_name)
+	
+	mod.skip = mod.skip_event(event_name)
+	
+	return func(self, event_name)
+end)
+
+
+
+mod.update = function(self)
+	
+	for unit,name in pairs(mod.bossname) do
+		local ai_extension = ScriptUnit.extension(unit, "ai_system")
+		if ai_extension then
+			
+			local bt_node_name = ai_extension:current_action_name()
+			if not mod.intro_started[unit] and (bt_node_name == "intro_idle" or bt_node_name == "dual_shoot_intro") then
+				-- mod:echo("start intro")
+				mod.intro_started[unit] = true
+			end
+			
+			if mod.intro_started[unit] and not (bt_node_name == "intro_idle" or bt_node_name == "dual_shoot_intro") then
+				-- mod:echo("intro finished")
+				
+				mod.intro_started[unit] = nil
+				mod.start[unit] = mod.get_game_time()
+				if unit == mod.deathrattler and mod.rasknitt then
+					mod.start[mod.rasknitt] = mod.get_game_time()
+					mod.rasknitt_fight = true
+				end
+			end
+			
+			-- mod:echo(tostring(mod.intro_started[unit]).." "..tostring(bt_node_name))
+		end
+		
+	end
+	
+end
+
+mod.on_setting_changed = function()
+
+	update = true
+end
 

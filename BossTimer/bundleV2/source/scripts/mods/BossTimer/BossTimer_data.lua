@@ -13,6 +13,12 @@ return {
 			["widget_type"] = "checkbox",
 			["text"] = mod:localize("box"),
 			["default_value"] = true
-		}
+		},
+		{
+			["setting_name"] = "activated_text",
+			["widget_type"] = "checkbox",
+			["text"] = mod:localize("box2"),
+			["default_value"] = true
+		},
 	}
 }

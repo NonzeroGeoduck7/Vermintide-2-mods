@@ -2,6 +2,12 @@ return {
 	box = {
 		en = "show a text message on the screen when bosses die"
 	},
+	box2 = {
+		en = "print a message in the chat when bosses die"
+	},
+	combatStats = {
+		en = "show kill stats during boss fights (applied after restart)"
+	},
 	mod_description = {
 		en = "show a text message on the screen when bosses die"
 	},
