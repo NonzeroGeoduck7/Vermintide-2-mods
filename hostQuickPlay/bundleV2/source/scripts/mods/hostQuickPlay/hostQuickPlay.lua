@@ -425,6 +425,7 @@ mod:hook(StartGameWindowEventSettings, "update", function(func, self, ...)
 end)
 
 
+
 -- SYNC WITH CUSTOM GAME SETTINGS
 mod:hook(StartGameWindowSettings, "create_ui_elements", function(func, self, ...)
 	
@@ -440,5 +441,7 @@ mod:hook(StartGameWindowSettings, "_update_additional_options", function(func, s
 	
 	local parent = self.parent
 	mod.host = parent:is_always_host_option_enabled()
-	mod.private = parent:is_private_option_enabled()
+	if mod.in_modded_realm() then
+		mod.private = parent:is_private_option_enabled()
+	end
 end)
