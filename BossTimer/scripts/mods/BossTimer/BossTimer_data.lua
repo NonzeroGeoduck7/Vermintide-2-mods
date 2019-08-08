@@ -20,11 +20,5 @@ return {
 			["text"] = mod:localize("box2"),
 			["default_value"] = true
 		},
-		{
-			["setting_name"] = "combatStats",
-			["widget_type"] = "checkbox",
-			["text"] = mod:localize("combatStats"),
-			["default_value"] = true
-		},
 	}
 }

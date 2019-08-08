@@ -31,39 +31,14 @@ mod.oneDead = nil
 mod.text_duration = 5 -- in seconds
 
 
-local chaos_kills = 0
-local skaven_kills = 0
-local elite_kills = 0
-local special_kills = 0
-
-
 mod.get_game_time = function()
 	return Managers.time:time("game")
-end
-
-mod.get_breed_info = function(unit)
-	breed = AiUtils.unit_breed(unit)
-	if breed then
-		return breed.race, breed.elite, breed.special
-	end
 end
 
 mod.is_me = function(unit)
 	return (unit == Managers.player:local_player().player_unit)
 end
 
-mod.reset_killstats = function()
-	size = 0
-	for i,j in pairs(mod.bossname) do
-		size = size + 1
-	end
-	if size <= 0 then
-		chaos_kills = 0
-		skaven_kills = 0
-		elite_kills = 0
-		special_kills = 0
-	end
-end
 
 mod.skip_event = function(event_name)
 	local skp = false
@@ -102,8 +77,6 @@ mod:hook(ScriptWorld, "load_level", function(func, world, level_name, ...)
 	mod.bossname = {}
 
 	mod.start = {}
-	
-	mod.reset_killstats()
 	
 	return func(world, level_name, ...)
 end)
@@ -152,7 +125,9 @@ mod.show_display_kill_message = function(self, text, is_second_line)
 			height = 3*height
 		end
 		
-		UIRenderer.draw_text(self.ui_top_renderer, text, font_mtrl, font_size, font_name, UIInverseScaleVectorToResolution({w / 2 - width/2, h / 4*3 - height/2}), Colors.color_definitions.white)
+		height_perc = h / 4*3
+		width_perc = w / 2
+		UIRenderer.draw_text(self.ui_top_renderer, text, font_mtrl, font_size, font_name, UIInverseScaleVectorToResolution({width_perc - width/2, height_perc - height/2}), Colors.color_definitions.white)
 	end)
 
 end
@@ -162,7 +137,10 @@ mod:hook(World, "spawn_unit", function (func, self, unit_name, ...)
 
 	local unit = func(self, unit_name, ...)
 	
+	-- mod:echo("spawn: "..tostring(unit_name))
+	
 	if mod.skip then
+		-- mod:echo("skip "..tostring(unit))
 		return unit
 	end
 	
@@ -209,10 +187,10 @@ mod:hook(World, "spawn_unit", function (func, self, unit_name, ...)
 	elseif unit_name == "units/beings/enemies/skaven_stormfiend/chr_skaven_stormfiend_boss" then
 		mod.bossname[unit] = "Deathrattler"
 		mod.deathrattler = unit
+	elseif unit_name == "units/beings/enemies/beastmen_minotaur/chr_beastmen_minotaur" then
+		mod.bossname[unit] = "Minotaur"
+		mod.start[unit] = mod.get_game_time()
 	end
-	
-	-- mod:echo("spawn: "..tostring(unit_name))
-	mod.reset_killstats()
 	
 	return unit
 	
@@ -225,9 +203,7 @@ end)
 --------------------------------------------------------
 
 
-local update = false
-
-mod:hook(DeathSystem, "kill_unit", function(func, self, unit, killing_blow)
+mod:hook(DeathSystem, "kill_unit", function(func, self, unit, ...)
 	
 	if mod.start[unit] then -- not nil
 			
@@ -280,13 +256,11 @@ mod:hook(DeathSystem, "kill_unit", function(func, self, unit, killing_blow)
 		mod.bossname[unit] = nil
 		mod.start[unit] = nil
 		
-		mod.reset_killstats()
-		
 	else
 		-- mod:echo("unit died, boss alive since " .. tostring(mod.start))
 	end
 	
-	return func(self, unit, killing_blow)
+	return func(self, unit, ...)
 end)
 
 
@@ -297,13 +271,14 @@ end)
 --------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------
 
-mod:hook(ConflictDirector, "start_terror_event", function (func, self, event_name)
+mod:hook(ConflictDirector, "start_terror_event", function (func, self, event_name, ...)
 	
 	mod.skip = mod.skip_event(event_name)
 	
-	return func(self, event_name)
+	return func(self, event_name, ...)
 end)
 
+-- TelemetryEvents.terror_event_started = function (self, event_name)
 
 
 mod.update = function(self)
@@ -334,10 +309,5 @@ mod.update = function(self)
 		
 	end
 	
-end
-
-mod.on_setting_changed = function()
-
-	update = true
 end
 

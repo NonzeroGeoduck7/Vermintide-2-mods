@@ -31,39 +31,14 @@ mod.oneDead = nil
 mod.text_duration = 5 -- in seconds
 
 
-local chaos_kills = 0
-local skaven_kills = 0
-local elite_kills = 0
-local special_kills = 0
-
-
 mod.get_game_time = function()
 	return Managers.time:time("game")
-end
-
-mod.get_breed_info = function(unit)
-	breed = AiUtils.unit_breed(unit)
-	if breed then
-		return breed.race, breed.elite, breed.special
-	end
 end
 
 mod.is_me = function(unit)
 	return (unit == Managers.player:local_player().player_unit)
 end
 
-mod.reset_killstats = function()
-	size = 0
-	for i,j in pairs(mod.bossname) do
-		size = size + 1
-	end
-	if size <= 0 then
-		chaos_kills = 0
-		skaven_kills = 0
-		elite_kills = 0
-		special_kills = 0
-	end
-end
 
 mod.skip_event = function(event_name)
 	local skp = false
@@ -102,8 +77,6 @@ mod:hook(ScriptWorld, "load_level", function(func, world, level_name, ...)
 	mod.bossname = {}
 
 	mod.start = {}
-	
-	mod.reset_killstats()
 	
 	return func(world, level_name, ...)
 end)
@@ -152,7 +125,9 @@ mod.show_display_kill_message = function(self, text, is_second_line)
 			height = 3*height
 		end
 		
-		UIRenderer.draw_text(self.ui_top_renderer, text, font_mtrl, font_size, font_name, UIInverseScaleVectorToResolution({w / 2 - width/2, h / 4*3 - height/2}), Colors.color_definitions.white)
+		height_perc = h / 4*3
+		width_perc = w / 2
+		UIRenderer.draw_text(self.ui_top_renderer, text, font_mtrl, font_size, font_name, UIInverseScaleVectorToResolution({width_perc - width/2, height_perc - height/2}), Colors.color_definitions.white)
 	end)
 
 end
@@ -162,7 +137,10 @@ mod:hook(World, "spawn_unit", function (func, self, unit_name, ...)
 
 	local unit = func(self, unit_name, ...)
 	
+	-- mod:echo("spawn: "..tostring(unit_name))
+	
 	if mod.skip then
+		-- mod:echo("skip "..tostring(unit))
 		return unit
 	end
 	
@@ -174,6 +152,9 @@ mod:hook(World, "spawn_unit", function (func, self, unit_name, ...)
 		mod.start[unit] = mod.get_game_time()
 	elseif unit_name == "units/beings/enemies/chaos_troll/chr_chaos_troll" then
 		mod.bossname[unit] = "Bile Troll"
+		mod.start[unit] = mod.get_game_time()
+	elseif unit_name == "units/beings/enemies/beastmen_minotaur/chr_beastmen_minotaur" then
+		mod.bossname[unit] = "Minotaur"
 		mod.start[unit] = mod.get_game_time()
 	elseif unit_name == "units/beings/enemies/chaos_spawn/chr_chaos_spawn" then
 		
@@ -211,9 +192,6 @@ mod:hook(World, "spawn_unit", function (func, self, unit_name, ...)
 		mod.deathrattler = unit
 	end
 	
-	-- mod:echo("spawn: "..tostring(unit_name))
-	mod.reset_killstats()
-	
 	return unit
 	
 end)
@@ -225,22 +203,7 @@ end)
 --------------------------------------------------------
 
 
-local update = false
-
-mod:hook(DeathSystem, "kill_unit", function(func, self, unit, killing_blow)
-	
-	i_am_attacker = mod.is_me(killing_blow[3])
-	
-	if i_am_attacker then
-		race, elite, special = mod.get_breed_info(unit)
-		
-		if race == "skaven"	then skaven_kills = skaven_kills + 1 	end
-		if race == "chaos"	then chaos_kills = chaos_kills + 1 		end
-		if elite			then elite_kills = elite_kills + 1 		end
-		if special			then special_kills = special_kills + 1 	end
-		
-		update = true
-	end
+mod:hook(DeathSystem, "kill_unit", function(func, self, unit, ...)
 	
 	if mod.start[unit] then -- not nil
 			
@@ -259,7 +222,8 @@ mod:hook(DeathSystem, "kill_unit", function(func, self, unit, killing_blow)
 			end
 			mod.text = mod.text .. " " .. tostring(math.floor((time_end - mod.start[unit])%60)) .. " seconds."
 			if mod:get("activated_text") then
-				mod:echo(mod.text)
+				local pop_chat = true
+				Managers.chat:add_local_system_message(1, mod.text, pop_chat)
 			end
 			mod.start_display_time = mod.get_game_time()
 		
@@ -276,7 +240,8 @@ mod:hook(DeathSystem, "kill_unit", function(func, self, unit, killing_blow)
 					mod.text_rasknitt = "The Grey Seer Rasknitt died " .. tostring(diff) .. " sec after his buddy Deathrattler."
 					mod.start_display_time_rasknitt = mod.get_game_time()
 					if mod:get("activated_text") then
-						mod:echo(mod.text_rasknitt)
+						local pop_chat = true
+						Managers.chat:add_local_system_message(1, mod.text_rasknitt, pop_chat)
 					end
 					
 					-- reset
@@ -293,13 +258,11 @@ mod:hook(DeathSystem, "kill_unit", function(func, self, unit, killing_blow)
 		mod.bossname[unit] = nil
 		mod.start[unit] = nil
 		
-		mod.reset_killstats()
-		
 	else
 		-- mod:echo("unit died, boss alive since " .. tostring(mod.start))
 	end
 	
-	return func(self, unit, killing_blow)
+	return func(self, unit, ...)
 end)
 
 
@@ -310,84 +273,15 @@ end)
 --------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------
 
-mod:hook(ConflictDirector, "start_terror_event", function (func, self, event_name)
+mod:hook(ConflictDirector, "start_terror_event", function (func, self, event_name, ...)
 	
 	mod.skip = mod.skip_event(event_name)
 	
-	return func(self, event_name)
+	return func(self, event_name, ...)
 end)
 
 -- TelemetryEvents.terror_event_started = function (self, event_name)
 
---------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------
--- BOSS HEALTH UI
---------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------
-
--- create
-mod:hook(BossHealthUI, "create_ui_elements", function(func, self)
-
-	func(self)
-	
-	mod:pcall(function()
-		local bar_widget = self._widgets_by_name.bar
-		
-		local name = "combat_metrics"
-		bar_widget.element.passes[#bar_widget.element.passes + 1] = {
-			pass_type = "text",
-			text_id = name,
-			style_id = name,
-			retained_mode = false
-		}
-		bar_widget.element.pass_data[#bar_widget.element.passes] = {
-			style_id = fav_style_key,
-			text_id = name,
-		}
-		bar_widget.content[name] = ""
-		bar_widget.style[name] = {
-			vertical_alignment = "top",
-			upper_case = false,
-			horizontal_alignment = "left",
-			font_size = 18,
-			font_type = "hell_shark",
-			text_color = Colors.get_color_table_with_alpha("font_button_normal", 255),
-			offset = {
-				4,
-				-18,
-				7
-			}
-		}
-		bar_widget.content.text_style_ids[#self._widgets_by_name.bar.content.text_style_ids + 1] = name
-	end)
-end)
-
-
-mod:hook(BossHealthUI, "_reset", function(func, self)
-
-	mod.reset_killstats()
-	
-	func(self)
-end)
-
-mod:hook(BossHealthUI, "update", function(func, self, dt, t)
-
-	func(self, dt, t)
-	
-	if update and mod:get("combatStats") then
-		mod:pcall(function()
-			local bar_widget = self._widgets_by_name.bar
-			if bar_widget then
-				bar_widget.style.title_text.offset[2] = -2*18
-				
-				bar_widget.content.combat_metrics = "skaven: "..tostring(skaven_kills)
-													..", chaos: "..tostring(chaos_kills)
-													..", elites: "..tostring(elite_kills)
-													..", specials: "..tostring(special_kills)
-			end
-		end)
-	end
-end)
 
 mod.update = function(self)
 	
@@ -417,10 +311,5 @@ mod.update = function(self)
 		
 	end
 	
-end
-
-mod.on_setting_changed = function()
-
-	update = true
 end
 
