@@ -93,11 +93,9 @@ mod:hook(DamageIndicatorGui, "update", function (func, self, dt)
 			-- mod:echo("damage: "..tostring(damage_type).." from "..tostring(attacker))
 			
 			local ff = false
-			for i,name in ipairs(PLAYER_UNITS) do
-				-- mod:echo(tostring(i).." "..tostring(name))
-				if name == attacker then
+			for _, player in pairs(Managers.player:human_and_bot_players()) do
+				if player.player_unit == attacker then
 					ff = true
-					-- mod:echo("friendly fire! "..tostring(name == attacker))
 				end
 			end
 			
@@ -130,7 +128,6 @@ mod:hook(DamageIndicatorGui, "update", function (func, self, dt)
 							or (mod:get("noArtilleryIndicatorName") and damage_type == "light_blunt_tank")) then
 							
 							widget = mod.hide_indicator(widget)
-							
 						end
 						
 						if ff then
@@ -182,3 +179,68 @@ end
 --]]
 
 -- Initialize and make permanent changes here
+
+--[[
+
+log: bounty hunter and pyromancer ult is not considered friendly fire.
+
+Set lobby begin:
+        Lobby data twitch_enabled = false
+        Lobby data power_level = 755
+        Lobby data player_slot_6 = 0:0
+        Lobby data num_players = 2
+        Lobby data host = 110000105c1adb3
+        Lobby data time_of_search = 1563116907
+        Lobby data game_mode = custom
+        Lobby data is_private = false
+        Lobby data level_key = farmlands
+        Lobby data player_slot_1 = 1100001051806f9:1
+        Lobby data selected_level_key = farmlands
+        Lobby data quick_game = false
+        Lobby data difficulty = hardest
+        Lobby data matchmaking = true
+        Lobby data player_slot_4 = 0:0
+        Lobby data unique_server_name = <okay/>
+        Lobby data player_slot_5 = 0:0
+        Lobby data player_slot_2 = 0:0
+        Lobby data country_code = CH
+        Lobby data player_slot_3 = 110000105c1adb3:1
+        Lobby data eac_authorized = false
+Set lobby end.
+[GameNetworkManager] game object created go_id=3074, owner_id=1100001051806f9 go_type=player_projectile_unit go_created_func_name=game_object_created_network_unit
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[GameNetworkManager] game object was destroyed id=3074 with type=player_projectile_unit, object_destroy_func=game_object_destroyed_network_unit, owned by peer=1100001051806f9
+[GameNetworkManager] game object created go_id=3075, owner_id=1100001051806f9 go_type=player_projectile_unit go_created_func_name=game_object_created_network_unit
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[MOD][ffindicator][ECHO] damage: shot_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[GameNetworkManager] game object was destroyed id=3075 with type=player_projectile_unit, object_destroy_func=game_object_destroyed_network_unit, owned by peer=1100001051806f9
+[GameNetworkManager] game object created go_id=3076, owner_id=1100001051806f9 go_type=player_projectile_unit go_created_func_name=game_object_created_network_unit
+[MOD][ffindicator][ECHO] damage: bolt_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[GameNetworkManager] game object was destroyed id=3076 with type=player_projectile_unit, object_destroy_func=game_object_destroyed_network_unit, owned by peer=1100001051806f9
+[GameNetworkManager] game object created go_id=3077, owner_id=1100001051806f9 go_type=player_projectile_unit go_created_func_name=game_object_created_network_unit
+[MOD][ffindicator][ECHO] damage: bolt_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[GameNetworkManager] game object was destroyed id=3077 with type=player_projectile_unit, object_destroy_func=game_object_destroyed_network_unit, owned by peer=1100001051806f9
+[GameNetworkManager] game object created go_id=3078, owner_id=1100001051806f9 go_type=player_projectile_unit go_created_func_name=game_object_created_network_unit
+[MOD][ffindicator][ECHO] damage: bolt_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[GameNetworkManager] game object was destroyed id=3078 with type=player_projectile_unit, object_destroy_func=game_object_destroyed_network_unit, owned by peer=1100001051806f9
+[GameNetworkManager] game object created go_id=3079, owner_id=1100001051806f9 go_type=player_projectile_unit go_created_func_name=game_object_created_network_unit
+[MOD][ffindicator][ECHO] damage: bolt_sniper from [Unit '#ID[df94116158fa20da]'] : 1
+[GameNetworkManager] game object was destroyed id=3079 with type=player_projectile_unit, object_destroy_func=game_object_destroyed_network_unit, owned by peer=1100001051806f9
+
+--]]
