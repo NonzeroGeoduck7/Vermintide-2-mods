@@ -111,7 +111,7 @@ end)
 
 mod.show_display_kill_message = function(self, text, is_second_line)
 	
-	local font_name = "gw_head_32"
+	local font_name = "gw_head"
 	local font_mtrl = "materials/fonts/" .. font_name
 
 	local w, h = UIResolution()
@@ -153,6 +153,9 @@ mod:hook(World, "spawn_unit", function (func, self, unit_name, ...)
 	elseif unit_name == "units/beings/enemies/chaos_troll/chr_chaos_troll" then
 		mod.bossname[unit] = "Bile Troll"
 		mod.start[unit] = mod.get_game_time()
+	elseif unit_name == "units/beings/enemies/beastmen_minotaur/chr_beastmen_minotaur" then
+		mod.bossname[unit] = "Minotaur"
+		mod.start[unit] = mod.get_game_time()
 	elseif unit_name == "units/beings/enemies/chaos_spawn/chr_chaos_spawn" then
 		
 		--------------------------------------------------------
@@ -187,9 +190,6 @@ mod:hook(World, "spawn_unit", function (func, self, unit_name, ...)
 	elseif unit_name == "units/beings/enemies/skaven_stormfiend/chr_skaven_stormfiend_boss" then
 		mod.bossname[unit] = "Deathrattler"
 		mod.deathrattler = unit
-	elseif unit_name == "units/beings/enemies/beastmen_minotaur/chr_beastmen_minotaur" then
-		mod.bossname[unit] = "Minotaur"
-		mod.start[unit] = mod.get_game_time()
 	end
 	
 	return unit
@@ -212,7 +212,7 @@ mod:hook(DeathSystem, "kill_unit", function(func, self, unit, ...)
 		if mod.bossname[unit] then
 			
 			--visual
-			mod.text = mod.bossname[unit] .. " died after "
+			mod.text = mod.bossname[unit] .. " died after"
 			if math.floor((time_end - mod.start[unit])/60) > 0 then
 				local time_min = math.floor((time_end - mod.start[unit])/60)
 				mod.text = mod.text .. tostring(time_min) .. " minute"
@@ -222,7 +222,8 @@ mod:hook(DeathSystem, "kill_unit", function(func, self, unit, ...)
 			end
 			mod.text = mod.text .. " " .. tostring(math.floor((time_end - mod.start[unit])%60)) .. " seconds."
 			if mod:get("activated_text") then
-				mod:echo(mod.text)
+				local pop_chat = true
+				Managers.chat:add_local_system_message(1, mod.text, pop_chat)
 			end
 			mod.start_display_time = mod.get_game_time()
 		
@@ -239,7 +240,8 @@ mod:hook(DeathSystem, "kill_unit", function(func, self, unit, ...)
 					mod.text_rasknitt = "The Grey Seer Rasknitt died " .. tostring(diff) .. " sec after his buddy Deathrattler."
 					mod.start_display_time_rasknitt = mod.get_game_time()
 					if mod:get("activated_text") then
-						mod:echo(mod.text_rasknitt)
+						local pop_chat = true
+						Managers.chat:add_local_system_message(1, mod.text_rasknitt, pop_chat)
 					end
 					
 					-- reset
