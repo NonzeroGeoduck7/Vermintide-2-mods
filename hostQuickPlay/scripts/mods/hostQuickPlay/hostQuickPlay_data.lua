@@ -1895,6 +1895,7 @@ local event_description_text_style = {
 }
 
 local event_summary_passes = {
+	"event_mission",
 	"mutators"
 }
 
