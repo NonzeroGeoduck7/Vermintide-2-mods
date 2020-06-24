@@ -86,13 +86,11 @@ mod.play_pickup_sound = function()
 
 end
 
-mod:hook(LevelTransitionHandler, "load_level", function (func, self, level_key)
+mod:hook_safe(LevelTransitionHandler, "load_level", function (self, level_key)
 
 	mod.active_level = level_key
 	
 	mod.skip = false
-	
-	return func(self, level_key)
 end)
 
 mod.get_player_name = function(player_unit)
