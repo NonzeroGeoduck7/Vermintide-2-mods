@@ -86,8 +86,10 @@ mod.play_pickup_sound = function()
 
 end
 
-mod:hook_safe(LevelTransitionHandler, "load_level", function (self, level_key)
+mod:hook_safe(LevelTransitionHandler, "load_current_level", function (self)
+	level_key = self:get_current_level_key()
 
+	-- mod:echo("level_key: " .. level_key)
 	mod.active_level = level_key
 	
 	mod.skip = false
@@ -181,22 +183,16 @@ end
 
 
 -- IF HOST
-mod:hook(InteractionHelper, "complete_interaction", function (func, self, interactor_unit, interactable_unit, result)
+mod:hook_safe(InteractionHelper, "complete_interaction", function (self, interactor_unit, interactable_unit, result)
 	
 	mod:pcall(function() mod.send_notification(interactor_unit, interactable_unit) end)
-	
-	-- original function
-	return func(self, interactor_unit, interactable_unit, result)
-	
+
 end)
 
 -- IF CLIENT
-mod:hook(InteractionHelper, "interaction_completed", function (func, self, interactor_unit, interactable_unit, result)
+mod:hook_safe(InteractionHelper, "interaction_completed", function (self, interactor_unit, interactable_unit, result)
 	
 	mod:pcall(function() mod.send_notification(interactor_unit, interactable_unit) end)
-	
-	-- original function
-	return func(self, interactor_unit, interactable_unit, result)
 	
 end)
 
@@ -247,7 +243,7 @@ mod.send_notification = function(interactor_unit, interactable_unit)
 end -- end function
 
 
-mod:hook("ChatManager", "add_local_system_message", function(func, self, channel_id, message, pop_chat)
+mod:hook_safe("ChatManager", "add_local_system_message", function(self, channel_id, message, pop_chat)
 
 	-- reject standard messages about loot die pickups
 	loc = string.format(Localize("system_chat_player_picked_up_loot_die"), "")
@@ -255,13 +251,10 @@ mod:hook("ChatManager", "add_local_system_message", function(func, self, channel
 		return
 	end
 
-	return func(self, channel_id, message, pop_chat)
 end)
 
-mod:hook(MissionObjectiveUI, "add_mission_objective", function(func, self, mission_name, text)
+mod:hook_safe(MissionObjectiveUI, "add_mission_objective", function(self, mission_name, ...)
 
 	mod.skip = mod.skip_objectives[mission_name]
-	
-	-- original function
-	func(self, mission_name, text)
+
 end)
